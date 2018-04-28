@@ -1,0 +1,60 @@
+---
+title: "Week One"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+```{r echo=FALSE, message=FALSE}
+library(downloader)
+library(tidyverse)
+
+url <- "https://raw.githubusercontent.com/genomicsclass/dagdata/master/inst/extdata/femaleMiceWeights.csv"
+female_mice_weights <- paste0("data/", basename(url))
+download(url, destfile = female_mice_weights, quiet = TRUE)
+```
+
+#### Motivation  
+Say we want to understand how diet relates to body weight increase, and we perform an experiment where we take a sample of rats and feed some high fat diet, the others a normal diet, and we notice some differences in body weight between these two. So take for example; 
+
+```{r message=FALSE}
+data <- read_csv(female_mice_weights)
+head(data)
+control <- filter(data, Diet == "chow") %>% select(Bodyweight) %>% unlist
+treatment <- filter(data, Diet == "hf") %>% select(Bodyweight) %>% unlist
+```
+Now we have both samples, if we compare them, we see that sometimes (not all the time), the body weight of the high fat mouse is bigger than the control, but here we want to compare the average, so on average, does high fat diet mean heavier mouse? 
+
+```{r}
+mean(treatment)
+mean(control)
+mean(treatment) - mean(control) 
+```
+
+We see on average that the treatment mice does have a heavier weight 
+
+#### Introduction to Random variables  
+
+```{r echo=FALSE, message=FALSE}
+url <- "https://raw.githubusercontent.com/genomicsclass/dagdata/master/inst/extdata/femaleControlsPopulation.csv"
+weights_control_pop <- paste0("data/", basename(url))
+download(url, destfile = weights_control_pop, quiet = TRUE)
+```
+
+Now, from the previous exercise, we saw that the weight of the treatment and control mice differs by about 3, we call these things random variables because its computed from a sample. In the real life, we barely get access to the whole population data, like the full population weights of mice in this example. So to simulate this, I've downloaded the population data of the control mice (we've been using a sample of this data so far). Now being a random variable means that, each time we compute a statistic of s smaple of the population, we get a different statistical value, for example, each time we calculate the mean of a sample from the population data here, we get a different value;  
+
+```{r}
+population <- read.csv(weights_control_pop)$Bodyweight
+for(i in 1:5) {
+  print(mean(sample(population, 12)))
+}
+```
+
+From the above, we see that we're always getting different values, and this explains why we said that the difference we noticed in the treatment and control mice is a random variable, because it was computed from a sample, and this applies most times to research results, because its usually the case that the experiment wasn't performed on the whole population, but a sample of the population.
+
+Given that the value we get is a random variable from our experiment, statistical inference helps us answer the question if the difference we noticed was due due to the high fat diet, or just random chance. 
+
+
+

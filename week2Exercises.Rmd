@@ -1,0 +1,36 @@
+---
+title: "Week Two Exercises"
+author: "Chidi Justice"
+date: "4/28/2018"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+```{r echo=FALSE, message=FALSE}
+library(downloader)
+library(tidyverse)
+
+population <- read.csv("data/femaleControlsPopulation.csv")$Bodyweight
+```
+
+###### Data used in exercise has already been downloaded [here](week2Note.Rmd)  
+
+##### Q1: What is the average of these weights?  
+```{r}
+mean(population) # 23.9 grams
+```
+
+##### Q2: After setting the seed at 1, set.seed(1) take a random sample of size 5. What is the absolute value (use abs) of the difference between the average of the sample and the average of all the values?  
+```{r}
+set.seed(1)
+abs(mean(sample(population, 5)) - mean(population))
+```
+
+##### Q3: After setting the seed at 5, set.seed(5) take a random sample of size 5. What is the absolute value of the difference between the average of the sample and the average of all the values?  
+```{r}
+set.seed(5)
+abs(mean(sample(population, 5)) - mean(population))
+```
