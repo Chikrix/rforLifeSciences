@@ -7,7 +7,7 @@ output: html_document
 knitr::opts_chunk$set(echo = TRUE)
 ```
 
-```{r echo=FALSE, message=FALSE}
+```{r message=FALSE}
 library(downloader)
 library(tidyverse)
 
@@ -19,7 +19,7 @@ download(url, destfile = female_mice_weights, quiet = TRUE)
 #### Motivation  
 Say we want to understand how diet relates to body weight increase, and we perform an experiment where we take a sample of rats and feed some high fat diet, the others a normal diet, and we notice some differences in body weight between these two. So take for example; 
 
-```{r message=FALSE}
+```{r, message=FALSE}
 data <- read_csv(female_mice_weights)
 head(data)
 control <- filter(data, Diet == "chow") %>% select(Bodyweight) %>% unlist
@@ -43,7 +43,7 @@ weights_control_pop <- paste0("data/", basename(url))
 download(url, destfile = weights_control_pop, quiet = TRUE)
 ```
 
-Now, from the previous exercise, we saw that the weight of the treatment and control mice differs by about 3, we call these things random variables because its computed from a sample. In the real life, we barely get access to the whole population data, like the full population weights of mice in this example. So to simulate this, I've downloaded the population data of the control mice (we've been using a sample of this data so far). Now being a random variable means that, each time we compute a statistic of s smaple of the population, we get a different statistical value, for example, each time we calculate the mean of a sample from the population data here, we get a different value;  
+Now, from the previous exercise, we saw that the weight of the treatment and control mice differs by about 3 grams, we call these kind of values random because its computed from a sample. In the real life, we barely get access to the whole population data, like the full population weights of mice in this example. To simulate this, I've downloaded the population data of the control mice (we've been using a sample of this data so far). Now being a random variable means that, each time we compute a statistic of a sample of the population, we get a different statistical value, for example, each time we calculate the mean of a sample from the population data here, we get a different value;  
 
 ```{r}
 population <- read.csv(weights_control_pop)$Bodyweight
@@ -54,7 +54,68 @@ for(i in 1:5) {
 
 From the above, we see that we're always getting different values, and this explains why we said that the difference we noticed in the treatment and control mice is a random variable, because it was computed from a sample, and this applies most times to research results, because its usually the case that the experiment wasn't performed on the whole population, but a sample of the population.
 
-Given that the value we get is a random variable from our experiment, statistical inference helps us answer the question if the difference we noticed was due due to the high fat diet, or just random chance. 
+Given that the value we get is a random variable from our experiment, statistical inference helps us answer the question if the difference we noticed was due to the high fat diet, or just random chance. 
 
+#### Introduction to Null Distribution  
+
+We'll like to test if the difference we observed between treatment and control mice was due to chance or not. So to do this, we test the Null hypothesis, which is that there's no significant difference and what we observed was due to chance, we'll use a null hypothesis distribution to test this, what that means is that 
+
+```{r}
+actual_observation <- mean(treatment) - mean(control)
+
+new_control <- sample(population, 12)
+new_treatment <- sample(population, 12)
+new_mean <- mean(new_treatment) - mean(new_control)
+```
+
+We take new samples from the control population, and since we're testing the null hypothesis, we create new treatment and control samples, then we check the mean difference. We do this several times to get the null distribution, which is basically all possible observations under the null. 
+
+```{r}
+mice_null_distribution <- sapply(1:10000, function(x) {
+  new_control <- sample(population, 12)
+  new_treatment <- sample(population, 12)
+  mean(new_treatment) - mean(new_control)
+})
+```
+
+Above, I've created the null distribution of the mice data, remember that the goal is to see how common it is to find the difference we observed with our experiment to see if its significant or not, so we test the null hypothesis, which is that the observation is not significant, to do this, we get random values from the control population to create a null distribution, which we then explore and can do statistical inference on  
+
+```{r message=FALSE}
+max(mice_null_distribution) # 5.12, which is actually bigger than the observation we saw in our experiment. Interesting.
+
+ggplot(data.frame(weights = mice_null_distribution), aes(x = weights)) +
+  geom_histogram(aes(fill = ..count..)) +
+  scale_fill_gradient("Count", low="green", high="red") +
+  ggtitle("Histogram of Nulls")
+```
+
+A histogram is a useful plot use to explore the distribution, we see that most of the data lies between -2 and 2. This gives us a picture of how likely it is to observe the difference we did in our experiment. To compute how likely it is to find such observation as we did in our experiment, what we do is to calculate the proportion of times we find that our observation from the null distribution  
+
+```{r}
+mean(mice_null_distribution > actual_observation)
+```
+From the above, we see that observing a difference like we did in our experiment only happens about 1.3% of the time in the population, which isn't very common. We can also compute how often it is big enough in absolute values, which is about 2.6%. 
+
+```{r}
+mean(abs(mice_null_distribution) > actual_observation)
+```
+
+That 2.6% is the p-value. It is the probability that an outcome from the null distribution is bigger than what we observed when the null hypothesis is true. So this p-value is considered small enough to be reported (in scientific literatures). So why we can compute the null distribution in this example, we should note that this isn't always possible in real life because we usually don't get access to the full population from which our experimental sample is drawn, so we need to know how to compute these p-values without having access to the entire population.  
+
+#### Probability Distributions  
+Distributions of data gives us a number of information of the data we're working with. For example, given the distribution, we can tell the proportion below any point, and with that information, we can tell how many values are within any interval. So if we can describ the distribution, we can describe the entire list. Given a distribution, we can plot the **Emperical Cumulative Distribution Function**, which shows us the f(x) for any x, where x is the height, and f(x) is the proportion. Knowing the distribution of a population answers the question of what is the probability of picking a value randomly that matches a given spec.  Given this information, take for example we have a distribution of height, we can answer the question what is the probability of an individual being shorter than a given height.  
+
+#### Bell Curve (Normal/Gaussian Distribution) 
+The formula that describes a normal distribution is 
+![Gaussian Distribution](images/gaussian_distribution.png)
+There are two numbers that are important to define a Normal distribution. These are the mean and the standard deviation. So if a list of numbers follows a normal distribution, and we know mu (mean/average) and sigma (standard deviation), then we can answer the question what is the proportion of x that's between any a and b value. For example, if the distribution of your data is approximated by a normal distribution, then we'll know that the 95% of the data is within 2 standard deviations from the average, 99% is within 2.5 standard deviations from the average, and 68% is within 1 standard deviations from the average. 
+![Average and Standard Deviation](images/average_standard_deviation.png)  
+
+A quantile-quantile (q-q) plot is useful to see if two data sets comes from a population with a common distribution. A q-q plot is a plot of quantiles of the first data set against the quantiles of the second dataset. A quantile is a fraction/percent of points below a given value, so for example, 0.7 (70%) quantile is the point at which 70% of the data fall under, and the remaining 30% fall above.  For a normal distribution, on the x axis we plot the percentiles of a normal distribution, and on the y axis we plot the percentiles of our data set. If they both have the same distribution, then the points should fall on the identity line.
+
+##### Standard Units  
+If you know your data is approximated by a normal distribution, one good strategy is to convert to standard units.  
+![Average](images/standard_units.png)  
+If we compute the standard units, then we're saying for each point, how many standard deviations we are from the mean. The value we get when we do this calculation in the formula above for every value is called a z-score. So if we convert the data to z-scores, if a value has a z-score of 2, we know that its a big score, because only 5% of the data is 2+ standard deviations away from the mean.  
 
 

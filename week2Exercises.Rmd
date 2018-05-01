@@ -12,7 +12,8 @@ knitr::opts_chunk$set(echo = TRUE)
 ```{r echo=FALSE, message=FALSE}
 library(downloader)
 library(tidyverse)
-
+library(gapminder)
+library(rafalib)
 population <- read.csv("data/femaleControlsPopulation.csv")$Bodyweight
 ```
 
@@ -34,3 +35,103 @@ abs(mean(sample(population, 5)) - mean(population))
 set.seed(5)
 abs(mean(sample(population, 5)) - mean(population))
 ```
+
+##### Q4: Set the seed at 1, then using a for-loop take a random sample of 5 mice 1,000 times. Save these averages. What proportion of these 1,000 averages are more than 1 gram away from the average of x ?  
+```{r}
+set.seed(1)
+## sorry, didn't use a for-loop
+sample_5 <- sapply(1:1000, function(x) {
+  mean(sample(population, 5))
+})
+hist(sample_5)
+mean(abs(sample_5 - mean(population)) > 1)
+```
+
+##### Q5: We are now going to increase the number of times we redo the sample from 1,000 to 10,000. Set the seed at 1, then using a for-loop take a random sample of 5 mice 10,000 times. Save these averages. What proportion of these 10,000 averages are more than 1 gram away from the average of x ?  
+```{r}
+set.seed(1)
+sample_n10000 <- sapply(1:10000, function(x) {
+  mean(sample(population, 5))
+})
+hist(sample_n10000)
+mean(abs(sample_n10000 - mean(population)) > 1)
+```
+##### Q6: Note that the answers to 1 and 2 barely changed. This is expected. The way we think about the random value distributions is as the distribution of the list of values obtained if we repeated the experiment an infinite number of times. On a computer, we can't perform an infinite number of iterations so instead, for our examples, we consider 1,000 to be large enough, thus 10,000 is as well. Now if instead we change the sample size, then we change the random variable and thus its distribution.
+
+Set the seed at 1, then using a for-loop take a random sample of 50 mice 1,000 times. Save these averages. What proportion of these 1,000 averages are more than 1 gram away from the average of x ?  
+```{r}
+set.seed(1)
+sample_50 <- sapply(1:1000, function(x) {
+  mean(sample(population, 50))
+})
+hist(sample_50)
+mean(abs(sample_50 - mean(population)) > 1)
+```
+
+From the above, I see that it's rarer to find a difference of more than one grams from the average of the population compared to when the number of samples is smaller? Why is this so? I think its because as the sample size increases, the number of common values are represented more, and those rarer ones are sampled less in the sample, so as the size grows, it shows a better representation of the population.
+
+```{r}
+data("gapminder")
+head(gapminder)
+
+year1952 <- gapminder %>%
+  filter(year == 1952)
+
+ggplot(year1952, aes(x = lifeExp)) +
+  geom_histogram(aes(fill = continent), binwidth = 1)
+```
+
+##### Q7: In statistics, the empirical cumulative distribution function (or empirical cdf or empirical distribution function) is the function F(a) for any a, which tells you the proportion of the values which are less than or equal to a.
+
+We can compute F in two ways: the simplest way is to type mean(x <= a). This calculates the number of values in x which are less than or equal a, divided by the total number of values in x, in other words the proportion of values less than or equal to a.
+
+The second way, which is a bit more complex for beginners, is to use the ecdf() function. This is a bit complicated because this is a function that doesn't return a value, but a function.
+
+Let's continue, using the simpler, mean() function.
+
+What is the proportion of countries in 1952 that have a life expectancy less than or equal to 40?  
+```{r}
+year1952 %>%
+  summarise(over40 = mean(lifeExp <= 40))
+```
+
+##### Q8: What is the proportion of countries in 1952 that have a life expectancy between 40 and 60 years? Hint: this is the proportion that have a life expectancy less than or equal to 60 years, minus the proportion that have a life expectancy less than or equal to 40 years.  
+```{r}
+year1952 %>%
+  summarise(between40_and_60 = mean(lifeExp >= 40 & lifeExp <= 60))
+```
+
+To see the ECDF of the height distribution  
+```{r}
+plot(ecdf(year1952$lifeExp))
+```
+I can redo the plot above with the following pattern  
+
+```{r}
+
+proportions <- sapply(year1952$lifeExp, function(x) {
+  mean(year1952$lifeExp <= x)
+})
+plot(year1952$lifeExp, proportions)
+```
+
+##### Q9: Use a histogram to "look" at the distribution of averages we get with a sample size of 5 and a sample size of 50. How would you say they differ?  
+```{r}
+mypar(1,2)
+hist(sample_5)
+hist(sample_50)
+mypar(1,1)
+qqplot(sample_5, sample_50)
+```
+
+##### Q10: For the last set of averages, the ones obtained from a sample size of 50, what proportion are between 23 and 25?  
+```{r}
+plot(ecdf(sample_50))
+mean(sample_50 >= 23 & sample_50 <= 25)
+```
+
+##### Q11: Now ask the same question of a normal distribution with average 23.9 and standard deviation 0.43.  
+```{r}
+pnorm((25 - 23.9) / 0.43)  - pnorm((23 - 23.9) / 0.43) 
+```
+
