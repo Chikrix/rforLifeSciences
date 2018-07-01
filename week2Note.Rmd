@@ -58,7 +58,8 @@ Given that the value we get is a random variable from our experiment, statistica
 
 #### Introduction to Null Distribution  
 
-We'll like to test if the difference we observed between treatment and control mice was due to chance or not. So to do this, we test the Null hypothesis, which is that there's no significant difference and what we observed was due to chance, we'll use a null hypothesis distribution to test this, what that means is that 
+The null hypothesis is a question we ask that, the difference we observe between samples isn't as a result of the cause we attribute it to, that is, there's no significant difference between specified samples and any difference we observe is due to sampling/experimental errors, just random values and not significant. 
+We'll like to test if the difference we observed between treatment and control mice was significant or not. So to do this, we test the Null hypothesis, which is that there's no significant difference and what we observed was due to chance, we'll use a null hypothesis distribution to test this, what that means is that 
 
 ```{r}
 actual_observation <- mean(treatment) - mean(control)
@@ -68,7 +69,7 @@ new_treatment <- sample(population, 12)
 new_mean <- mean(new_treatment) - mean(new_control)
 ```
 
-We take new samples from the control population, and since we're testing the null hypothesis, we create new treatment and control samples, then we check the mean difference. We do this several times to get the null distribution, which is basically all possible observations under the null. 
+We take new samples from the control population (fed the same diet), and since we're testing the null hypothesis, we create new treatment and control samples from this population, then we check the mean difference. We do this several times to get the null distribution; 
 
 ```{r}
 mice_null_distribution <- sapply(1:10000, function(x) {
@@ -78,7 +79,7 @@ mice_null_distribution <- sapply(1:10000, function(x) {
 })
 ```
 
-Above, I've created the null distribution of the mice data, remember that the goal is to see how common it is to find the difference we observed with our experiment to see if its significant or not, so we test the null hypothesis, which is that the observation is not significant, to do this, we get random values from the control population to create a null distribution, which we then explore and can do statistical inference on  
+Above, I've created the null distribution of the mice data, remember that the goal is to see how common it is to find the difference we observed with our experiment to see if its significant or not, using samples fed the same diet (from the same population).
 
 ```{r message=FALSE}
 max(mice_null_distribution) # 5.12, which is actually bigger than the observation we saw in our experiment. Interesting.
@@ -89,7 +90,7 @@ ggplot(data.frame(weights = mice_null_distribution), aes(x = weights)) +
   ggtitle("Histogram of Nulls")
 ```
 
-A histogram is a useful plot use to explore the distribution, we see that most of the data lies between -2 and 2. This gives us a picture of how likely it is to observe the difference we did in our experiment. To compute how likely it is to find such observation as we did in our experiment, what we do is to calculate the proportion of times we find that our observation from the null distribution  
+A histogram is a useful plot use to explore the distribution, we see that most of the data lies between -2 and 2. This gives us a picture of how likely it is to observe the difference we did in our experiment. To compute how likely it is to find such observation as we did in our experiment, what we do is to calculate the proportion of times we find that observation from the null distribution  
 
 ```{r}
 mean(mice_null_distribution > actual_observation)
@@ -100,10 +101,10 @@ From the above, we see that observing a difference like we did in our experiment
 mean(abs(mice_null_distribution) > actual_observation)
 ```
 
-That 2.6% is the p-value. It is the probability that an outcome from the null distribution is bigger than what we observed when the null hypothesis is true. So this p-value is considered small enough to be reported (in scientific literatures). So why we can compute the null distribution in this example, we should note that this isn't always possible in real life because we usually don't get access to the full population from which our experimental sample is drawn, so we need to know how to compute these p-values without having access to the entire population.  
+That 2.6% is the p-value. It is the probability that an outcome from the null distribution is bigger than what we observed when the null hypothesis is true. So this p-value is considered small enough to be reported (in scientific literature), and therefore we reject the null hypothesis that the observed difference is not significant. So why we can compute the null distribution in this example, we should note that this isn't always possible in real life because we usually don't get access to the full population from which our experimental sample is drawn, so we need to know how to compute these p-values without having access to the entire population.  
 
 #### Probability Distributions  
-Distributions of data gives us a number of information of the data we're working with. For example, given the distribution, we can tell the proportion below any point, and with that information, we can tell how many values are within any interval. So if we can describ the distribution, we can describe the entire list. Given a distribution, we can plot the **Emperical Cumulative Distribution Function**, which shows us the f(x) for any x, where x is the height, and f(x) is the proportion. Knowing the distribution of a population answers the question of what is the probability of picking a value randomly that matches a given spec.  Given this information, take for example we have a distribution of height, we can answer the question what is the probability of an individual being shorter than a given height.  
+Distributions of data gives us a number of information of the data we're working with. For example, given the distribution, we can tell the proportion below any point, and with that information, we can tell how many values are within any interval. So if we can describe the distribution, we can describe the entire data Given a distribution, we can plot the **Emperical Cumulative Distribution Function**, which shows us the f(x) for any x, where x is the height, and f(x) is the proportion. Knowing the distribution of a population answers the question of what is the probability of picking a value randomly that matches a given spec.  Given this information, take for example we have a distribution of height, we can answer the question what is the probability of an individual being shorter than a given height.  
 
 #### Bell Curve (Normal/Gaussian Distribution) 
 The formula that describes a normal distribution is 
@@ -118,4 +119,6 @@ If you know your data is approximated by a normal distribution, one good strateg
 ![Average](images/standard_units.png)  
 If we compute the standard units, then we're saying for each point, how many standard deviations we are from the mean. The value we get when we do this calculation in the formula above for every value is called a z-score. So if we convert the data to z-scores, if a value has a z-score of 2, we know that its a big score, because only 5% of the data is 2+ standard deviations away from the mean.  
 
+#### Populations, Parameters, and sample estimates.  
+The idea behind statistical inference is that we can take a sample data, from which we're going to infer something from, without having to rely on the entire population, or take multiple measurements. So take for example we want to compare the height of men and women and check on average if men are taller than women, so since we don't have the entire population to measure the averages for both gender and answer our question, we take a sample, after taking the samples list from each gender, we can now compare both averages and we notice a difference in the average, now this difference we noticed is a random variable, because if we take new samples from the population, and calculate the average difference from both samples averages (male and female), we'll get a different value each time. Statistical inference helps us know how different this difference could be if we keep taking more samples (without actually really taking more samples), i.e how close is the sample average from the population average.
 

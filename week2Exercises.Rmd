@@ -14,7 +14,13 @@ library(downloader)
 library(tidyverse)
 library(gapminder)
 library(rafalib)
+
+url <- "https://raw.githubusercontent.com/genomicsclass/dagdata/master/inst/extdata/mice_pheno.csv"
+mice_pheno <- paste0("data/", basename(url))
+download(url, destfile = mice_pheno, quiet = TRUE)
+
 population <- read.csv("data/femaleControlsPopulation.csv")$Bodyweight
+mice_pheno <- read.csv(mice_pheno)
 ```
 
 ###### Data used in exercise has already been downloaded [here](week2Note.Rmd)  
@@ -83,7 +89,7 @@ ggplot(year1952, aes(x = lifeExp)) +
 
 ##### Q7: In statistics, the empirical cumulative distribution function (or empirical cdf or empirical distribution function) is the function F(a) for any a, which tells you the proportion of the values which are less than or equal to a.
 
-We can compute F in two ways: the simplest way is to type mean(x <= a). This calculates the number of values in x which are less than or equal a, divided by the total number of values in x, in other words the proportion of values less than or equal to a.
+We can compute F in two ways: the simplest way is to type `mean(x <= a)`. This calculates the number of values in x which are less than or equal a, divided by the total number of values in x, in other words the proportion of values less than or equal to a.
 
 The second way, which is a bit more complex for beginners, is to use the ecdf() function. This is a bit complicated because this is a function that doesn't return a value, but a function.
 
@@ -105,10 +111,10 @@ To see the ECDF of the height distribution
 ```{r}
 plot(ecdf(year1952$lifeExp))
 ```
+
 I can redo the plot above with the following pattern  
 
 ```{r}
-
 proportions <- sapply(year1952$lifeExp, function(x) {
   mean(year1952$lifeExp <= x)
 })
@@ -134,4 +140,81 @@ mean(sample_50 >= 23 & sample_50 <= 25)
 ```{r}
 pnorm((25 - 23.9) / 0.43)  - pnorm((23 - 23.9) / 0.43) 
 ```
+We will remove the lines that contain missing values:   
+```{r}
+mice_pheno_no_na = na.omit(mice_pheno)
+head(mice_pheno_no_na)
+```
+
+##### Q12: Use dplyr to create a vector x with the body weight of all males on the control (chow) diet. What is this population's average?  
+```{r}
+mice_pheno_no_na %>%
+  filter(Sex == "M", Diet == "chow") -> x
+mean(x$Bodyweight)
+```
+##### Q13: Now use the rafalib package and use the popsd function to compute the population standard deviation.  
+```{r}
+popsd(x$Bodyweight)
+```
+##### Q14: Set the seed at 1. Take a random sample  of size 25 from x. What is the sample average?  
+```{r}
+set.seed(1)
+x_sample <- sample(x$Bodyweight, 25)
+mean(x_sample)
+```
+##### Q15: Use dplyr to create a vector y with the body weight of all males on the high fat hf) diet. What is this population's average?  
+```{r}
+mice_pheno_no_na %>%
+  filter(Sex == "M", Diet == "hf") -> y
+mean(y$Bodyweight)
+```
+##### Q16: Now use the rafalib package and use the popsd function to compute the population standard deviation.  
+```{r}
+popsd(y$Bodyweight)
+```
+##### Q17: Set the seed at 1. Take a random sample  of size 25 from y. What is the sample average?  
+```{r}
+set.seed(1)
+y_sample <- sample(y$Bodyweight, 25)
+mean(y_sample)
+```
+##### Q18: What is the difference in absolute value between sample averages and population averages?  
+```{r}
+abs((mean(y_sample) - mean(x_sample)) - (mean(y$Bodyweight) - mean(x$Bodyweight)))
+```
+##### Q19: Repeat the above for females. Make sure to set the seed to 1 before each sample call. What is the difference in absolute value between sample averages and population averages?  
+```{r}
+set.seed(1)
+mice_pheno_no_na %>%
+  filter(Sex == "F") %>%
+  group_by(Diet) %>%
+  summarise(
+    mut
+  )
+```
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
