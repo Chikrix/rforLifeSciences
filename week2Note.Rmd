@@ -17,15 +17,14 @@ download(url, destfile = female_mice_weights, quiet = TRUE)
 ```
 
 #### Motivation  
-Say we want to understand how diet relates to body weight increase, and we perform an experiment where we take a sample of rats and feed some high fat diet, the others a normal diet, and we notice some differences in body weight between these two. So take for example; 
-
+Say we want to understand how diet relates to body weight increase, and we perform an experiment where we take a sample of rats and feed some high fat diet, the others a normal diet, and we notice some differences in body weight between these two. So take for example;  
 ```{r, message=FALSE}
 data <- read_csv(female_mice_weights)
 head(data)
 control <- filter(data, Diet == "chow") %>% select(Bodyweight) %>% unlist
 treatment <- filter(data, Diet == "hf") %>% select(Bodyweight) %>% unlist
 ```
-Now we have both samples, if we compare them, we see that sometimes (not all the time), the body weight of the high fat mouse is bigger than the control, but here we want to compare the average, so on average, does high fat diet mean heavier mouse? 
+Now we have both samples, if we compare them, we see that sometimes (not all the time), the body weight of the high fat mouse is bigger than the control, but here we want to compare the average, so on average, does high fat diet mean heavier mouse?  
 
 ```{r}
 mean(treatment)
@@ -51,7 +50,6 @@ for(i in 1:5) {
   print(mean(sample(population, 12)))
 }
 ```
-
 From the above, we see that we're always getting different values, and this explains why we said that the difference we noticed in the treatment and control mice is a random variable, because it was computed from a sample, and this applies most times to research results, because its usually the case that the experiment wasn't performed on the whole population, but a sample of the population.
 
 Given that the value we get is a random variable from our experiment, statistical inference helps us answer the question if the difference we noticed was due to the high fat diet, or just random chance. 
@@ -72,25 +70,26 @@ new_mean <- mean(new_treatment) - mean(new_control)
 We take new samples from the control population (fed the same diet), and since we're testing the null hypothesis, we create new treatment and control samples from this population, then we check the mean difference. We do this several times to get the null distribution; 
 
 ```{r}
+set.seed(5)
 mice_null_distribution <- sapply(1:10000, function(x) {
   new_control <- sample(population, 12)
   new_treatment <- sample(population, 12)
-  mean(new_treatment) - mean(new_control)
+  mean(new_treatment) - mean(new_control),
 })
 ```
 
 Above, I've created the null distribution of the mice data, remember that the goal is to see how common it is to find the difference we observed with our experiment to see if its significant or not, using samples fed the same diet (from the same population).
 
 ```{r message=FALSE}
-max(mice_null_distribution) # 5.12, which is actually bigger than the observation we saw in our experiment. Interesting.
+max(mice_null_distribution) # 5.10, which is actually bigger than the observation we saw in our experiment. Interesting.
 
 ggplot(data.frame(weights = mice_null_distribution), aes(x = weights)) +
   geom_histogram(aes(fill = ..count..)) +
-  scale_fill_gradient("Count", low="green", high="red") +
+  scale_fill_gradient("Count", low = "green", high = "red") +
   ggtitle("Histogram of Nulls")
 ```
 
-A histogram is a useful plot use to explore the distribution, we see that most of the data lies between -2 and 2. This gives us a picture of how likely it is to observe the difference we did in our experiment. To compute how likely it is to find such observation as we did in our experiment, what we do is to calculate the proportion of times we find that observation from the null distribution  
+A histogram is a useful plot used to explore the distribution, we see that most of the data lies between -2 and 2. This gives us a picture of how likely it is to observe the difference we did in our experiment. To compute how likely it is to find such observation as we did in our experiment, what we do is to calculate the proportion of times we find that observation from the null distribution  
 
 ```{r}
 mean(mice_null_distribution > actual_observation)
@@ -104,7 +103,7 @@ mean(abs(mice_null_distribution) > actual_observation)
 That 2.6% is the p-value. It is the probability that an outcome from the null distribution is bigger than what we observed when the null hypothesis is true. So this p-value is considered small enough to be reported (in scientific literature), and therefore we reject the null hypothesis that the observed difference is not significant. So why we can compute the null distribution in this example, we should note that this isn't always possible in real life because we usually don't get access to the full population from which our experimental sample is drawn, so we need to know how to compute these p-values without having access to the entire population.  
 
 #### Probability Distributions  
-Distributions of data gives us a number of information of the data we're working with. For example, given the distribution, we can tell the proportion below any point, and with that information, we can tell how many values are within any interval. So if we can describe the distribution, we can describe the entire data Given a distribution, we can plot the **Emperical Cumulative Distribution Function**, which shows us the f(x) for any x, where x is the height, and f(x) is the proportion. Knowing the distribution of a population answers the question of what is the probability of picking a value randomly that matches a given spec.  Given this information, take for example we have a distribution of height, we can answer the question what is the probability of an individual being shorter than a given height.  
+Distributions of data gives us a number of information of the data we're working with. For example, given the distribution, we can tell the proportion below any point, and with that information, we can tell how many values are within any interval. So if we can describe the distribution, we can describe the entire data Given a distribution, we can plot the **Emperical Cumulative Distribution Function**, which shows us the f(x) for any x, where x is the height for example, and f(x) is the proportion. Knowing the distribution of a population answers the question of what is the probability of picking a value randomly that matches a given spec.  Given this information, take for example we have a distribution of height, we can answer the question what is the probability of an individual being shorter than a given height.  
 
 #### Bell Curve (Normal/Gaussian Distribution) 
 The formula that describes a normal distribution is 

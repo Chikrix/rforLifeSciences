@@ -45,7 +45,6 @@ abs(mean(sample(population, 5)) - mean(population))
 ##### Q4: Set the seed at 1, then using a for-loop take a random sample of 5 mice 1,000 times. Save these averages. What proportion of these 1,000 averages are more than 1 gram away from the average of x ?  
 ```{r}
 set.seed(1)
-## sorry, didn't use a for-loop
 sample_5 <- sapply(1:1000, function(x) {
   mean(sample(population, 5))
 })
@@ -110,6 +109,9 @@ year1952 %>%
 To see the ECDF of the height distribution  
 ```{r}
 plot(ecdf(year1952$lifeExp))
+# ================================
+ggplot(year1952, aes(lifeExp)) +
+  stat_ecdf(geom = "step")
 ```
 
 I can redo the plot above with the following pattern  
