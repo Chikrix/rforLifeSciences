@@ -164,7 +164,7 @@ set.seed(1)
 x_sample <- sample(x$Bodyweight, 25)
 mean(x_sample)
 ```
-##### Q15: Use dplyr to create a vector y with the body weight of all males on the high fat hf) diet. What is this population's average?  
+##### Q15: Use dplyr to create a vector y with the body weight of all males on the high fat hf diet. What is this population's average?  
 ```{r}
 mice_pheno_no_na %>%
   filter(Sex == "M", Diet == "hf") -> y
@@ -186,20 +186,31 @@ abs((mean(y_sample) - mean(x_sample)) - (mean(y$Bodyweight) - mean(x$Bodyweight)
 ```
 ##### Q19: Repeat the above for females. Make sure to set the seed to 1 before each sample call. What is the difference in absolute value between sample averages and population averages?  
 ```{r}
-set.seed(1)
 mice_pheno_no_na %>%
-  filter(Sex == "F") %>%
-  group_by(Diet) %>%
-  summarise(
-    mut
-  )
+  filter(Sex == "F", Diet == "hf") -> females_hf
+
+mice_pheno_no_na %>%
+  filter(Sex == "F", Diet == "chow") -> females_chow
+
+set.seed(1)
+samples_female_chow <- sample(females_chow$Bodyweight, 25)
+
+set.seed(1)
+samples_female_hf <- sample(females_hf$Bodyweight, 25)
+
+
+abs((mean(samples_female_hf) - mean(samples_female_chow)) - (mean(females_hf$Bodyweight) - mean(females_chow$Bodyweight)))
+
+  
 ```
 
-
-
-
-
-
+##### Q20: For the females, our sample estimates were closer to the population difference than with males. What is a possible explanation for this?  
+```{r}
+mice_pheno_no_na %>%
+  group_by(Sex) %>%
+  summarise(averages = popsd(Bodyweight))
+```
+To check this, it is because the male sample has more variance than the female sample as seen above.
 
 
 
