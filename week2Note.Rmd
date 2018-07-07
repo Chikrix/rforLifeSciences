@@ -74,7 +74,7 @@ set.seed(5)
 mice_null_distribution <- sapply(1:10000, function(x) {
   new_control <- sample(population, 12)
   new_treatment <- sample(population, 12)
-  mean(new_treatment) - mean(new_control),
+  mean(new_treatment) - mean(new_control)
 })
 ```
 
@@ -120,4 +120,7 @@ If we compute the standard units, then we're saying for each point, how many sta
 
 #### Populations, Parameters, and sample estimates.  
 The idea behind statistical inference is that we can take a sample data, from which we're going to infer something from, without having to rely on the entire population, or take multiple measurements. So take for example we want to compare the height of men and women and check on average if men are taller than women, so since we don't have the entire population to measure the averages for both gender and answer our question, we take a sample, after taking the samples list from each gender, we can now compare both averages and we notice a difference in the average, now this difference we noticed is a random variable, because if we take new samples from the population, and calculate the average difference from both samples averages (male and female), we'll get a different value each time. Statistical inference helps us know how different this difference could be if we keep taking more samples (without actually really taking more samples), i.e how close is the sample average from the population average.
+
+#### Central Limit Theorem (CLT)  
+The CLT tells us that the sample average follows a normal distribution. Basically, what the CLT is telling us is; given that the sample average is a random value, if we keep taking samples from the population, the distribution of these sample averages becomes normally distributed, and the bigger the size of our sample, the smaller the spread. Problem here is that this would need the population, which we usually don't have access to.  
 

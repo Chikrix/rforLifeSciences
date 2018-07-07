@@ -14,6 +14,7 @@ library(downloader)
 library(tidyverse)
 library(gapminder)
 library(rafalib)
+library(patchwork)
 
 url <- "https://raw.githubusercontent.com/genomicsclass/dagdata/master/inst/extdata/mice_pheno.csv"
 mice_pheno <- paste0("data/", basename(url))
@@ -109,9 +110,6 @@ year1952 %>%
 To see the ECDF of the height distribution  
 ```{r}
 plot(ecdf(year1952$lifeExp))
-# ================================
-ggplot(year1952, aes(lifeExp)) +
-  stat_ecdf(geom = "step")
 ```
 
 I can redo the plot above with the following pattern  
@@ -210,7 +208,95 @@ mice_pheno_no_na %>%
   group_by(Sex) %>%
   summarise(averages = popsd(Bodyweight))
 ```
-To check this, it is because the male sample has more variance than the female sample as seen above.
+To check this, it is because the male sample has more variance than the female sample as seen above.  
+
+##### Q21, Q22, Q23: If a list of numbers has a distribution that is well approximated by the normal distribution, what proportion of these numbers are within one standard deviation away from the list's average?  
+~0.68 is 1 sd from the mean, 0.95 and 0.99 is respectively 2 and 2.5 standard deviations away from the mean  
+
+##### Q24: Define y to be the weights of males on the control diet. What proportion of the mice are within one standard deviation away from the average weight (remember to use popsd for the population sd)?  
+```{r}
+mice_pheno %>%
+  filter(Sex == "M", Diet == "chow", !is.na(Bodyweight)) %>%
+  select(Bodyweight) %>%
+  unlist() -> male_control
+
+mean(male_control < (mean(male_control) + popsd(male_control)))
+y <- mean(male_control)
+x <- popsd(male_control)
+mean(male_control < y + x) - mean(male_control < y - x)
+
+# Provided solution, this is even more intuitive than the solution I presented above. First I calculate the distance from the mean
+# for every value, then look for how many sd from the mean these differences represented by dividing by the population standard devition,
+# then looking for the proportion less than or equal to 1 standard deviations in absolute value.
+diff_from_mean <- (male_control - mean(male_control)) / popsd(male_control)
+mean(abs(y) <= 1)
+```
+
+Although the above works, I got that solution from a student reply on the discussion board, honestly I don't understand why I had to subtract the proportion of mice less than the mean minus 1 standard deviation
+
+##### Q25: What proportion of these numbers are within two standard deviations away from the list's average?    
+```{r}
+mean(male_control < y + (x * 2)) - mean(male_control < y - (x * 2))
+```
+
+##### Q26: What proportion of these numbers are within three standard deviations away from the list's average?  
+```{r}
+mean(male_control < y + (x * 3)) - mean(male_control < y - (x * 3))
+```
+
+##### Q26: Note that the numbers for the normal distribution and our weights are relatively close. Also, notice that we are indirectly comparing quantiles of the normal distribution to quantiles of the mouse weight distribution. We can actually compare all quantiles using a qqplot. Which of the following best describes the qq-plot comparing mouse weights to the normal distribution? 
+```{r}
+qqnorm(diff_from_mean)
+qqline(diff_from_mean)
+```
+
+The above helps me compare if my distribution is well approximated by a normal distribution using a theoritical distribution, and the above shows that my distribution is well approximated by a normal distribution.  
+
+##### Q27: Create the above qq-plot for the four populations: male/females on each of the two diets. What is the most likely explanation for the mouse weights being well approximated? What is the best explanation for all these being well approximated by the normal distribution?  
+```{r}
+plot_qqplot <- function(distribution) {
+  qqnorm(distribution)
+  qqline(distribution)
+}
+
+generate_data <- function(sex, diet) {
+  return(mice_pheno_no_na %>%
+    filter(Sex == sex, Diet == diet) %>% 
+    select(Bodyweight) %>% 
+    mutate(Bodyweight = ((Bodyweight - mean(Bodyweight)) / popsd(Bodyweight))) %>%
+    unlist())
+}
+
+par(mfrow = c(2,2))
+
+male_control <- generate_data("M", "chow")
+male_hf <- generate_data("M", "hf")
+female_hf <- generate_data("F", "hf")
+female_control <- generate_data("F", "chow")
+
+sapply(list(male_control, male_hf, female_control, female_hf), plot_qqplot)
+```
+
+##### Q28: Here we are going to use the function replicate to learn about the distribution of random variables. All the above exercises relate to the normal distribution as an approximation of the distribution of a fixed list of numbers or a population. We have not yet discussed probability in these exercises. If the distribution of a list of numbers is approximately normal, then if we pick a number at random from this distribution, it will follow a normal distribution. However, it is important to remember that stating that some quantity has a distribution does not necessarily imply this quantity is random. Also, keep in mind that this is not related to the central limit theorem. The central limit applies to averages of random variables. Let's explore this concept.
+
+We will now take a sample of size 25 from the population of males on the chow diet. The average of this sample is our random variable. We will use the replicate to observe 10,000 realizations of this random variable. Set the seed at 1, generate these 10,000 averages. Make a histogram and qq-plot of these 10,000 numbers against the normal distribution.
+
+We can see that, as predicted by the CLT, the distribution of the random variable is very well approximated by the normal distribution.  
+```{r}
+y <- filter(mice_pheno_no_na, Sex=="M" & Diet=="chow") %>% select(Bodyweight) %>% unlist
+avgs <- replicate(10000, mean(sample(y, 25)))
+mypar(1,2)
+hist(avgs)
+qqnorm(avgs)
+qqline(avgs)
+
+mean(avgs)
+```
+
+##### Q29: What is the standard deviation of the distribution of sample averages?  
+```{r}
+popsd(avgs)
+```
 
 
 
