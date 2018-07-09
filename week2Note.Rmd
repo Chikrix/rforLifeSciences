@@ -121,6 +121,40 @@ If we compute the standard units, then we're saying for each point, how many sta
 #### Populations, Parameters, and sample estimates.  
 The idea behind statistical inference is that we can take a sample data, from which we're going to infer something from, without having to rely on the entire population, or take multiple measurements. So take for example we want to compare the height of men and women and check on average if men are taller than women, so since we don't have the entire population to measure the averages for both gender and answer our question, we take a sample, after taking the samples list from each gender, we can now compare both averages and we notice a difference in the average, now this difference we noticed is a random variable, because if we take new samples from the population, and calculate the average difference from both samples averages (male and female), we'll get a different value each time. Statistical inference helps us know how different this difference could be if we keep taking more samples (without actually really taking more samples), i.e how close is the sample average from the population average.
 
-#### Central Limit Theorem (CLT)  
-The CLT tells us that the sample average follows a normal distribution. Basically, what the CLT is telling us is; given that the sample average is a random value, if we keep taking samples from the population, the distribution of these sample averages becomes normally distributed, and the bigger the size of our sample, the smaller the spread. Problem here is that this would need the population, which we usually don't have access to.  
+##### Central Limit Theorem (CLT)  
+The CLT tells us that the sample average follows a normal distribution. Basically, what the CLT is telling us is; given that the sample average is a random value, if we keep taking samples from the population, the distribution of these sample averages becomes normally distributed, and the bigger the size of our sample, the smaller the spread. Problem here is that this would need the population, which we usually don't have access to. I tested this above when I created the null distribution of the samples and visualized this using a histogram, which showed that it was indeed a bell curve histogram. Another way I can use to test if my distribution follows a normal distribution is by using qqnorm and qqline to plot the qqplot and line of this distribution with a theoritical normal distribution and I would see how much my distribution follows a normal distribution. If we can establish that a null distribution is normally distributed, this provides a good foundation for making further inference based on the characteristics of CLT. One important thing we can do is to obtain p-values and confidence intervals using the CLT and the t-statistic, which is important because now we are getting important values without having to depend on the population so we can repeat our experiments many times.  
+
+##### T-tests  
+```{r}
+# get the treatment and control subjects
+control <- filter(data, Diet == "chow") %>% select(Bodyweight) %>% unlist
+treatment <- filter(data, Diet == "hf") %>% select(Bodyweight) %>% unlist
+
+N <- length(treatment)
+
+# Observed difference between treatment and control
+observed_difference <- mean(treatment) - mean(control)
+
+standard_error <- sqrt(
+  var(treatment) / N + var(control) / N 
+  )
+# the t statistic value
+(t_stat <- observed_difference / standard_error)
+```
+
+What the t-statistic together with the CLT is telling us is that **the null distribution is approximated by a normal distribution with mean 0 and variance 1**. With this, we can compute p-values using the `pnorm` function which tells us what proportion of normally distributed data (data with mean 0 and standard deviation 1) are lower than whatever data we pass into it as input, so to get out p-value, we do  
+```{r}
+(p_value <- 2 * (1 - pnorm(t_stat)))
+```
+
+If the sample size is small, and we compute the null distribution and check how that conforms with a normal distribution using `qqnorm`, we might get a visualisation that shows that its not, becuase of the small sample size, which would result to more spread in our data which would affect the distribution. If we believe that our data can be approximated by a normal distribution, then we can use the t-statistic to get p-values. In practice, to perform the t-test, we do the following  
+```{r}
+(t_test <- t.test(treatment, control))
+```
+
+The above would give us the t statistic, the p-value, and the confidence interval. Performing the t-test as above using the default function isn't done with the assumption that the CLT applies (it uses a t-distribution), so for that reason the p-value is different as the t-distribution is more spread than the normal distribution. This makes sense because if we look at the `qqnorm` and `qqline` of both control and treatment, it might match or slightly match, so the t-distribution might give us a good approximation of the actual situation.  
+
+
+
+
 
